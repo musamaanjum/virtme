@@ -233,6 +233,7 @@ echo "virtme-init: console is $consdev"
 install -d -m 0755 /tmp/roothome
 export HOME=/tmp/roothome
 
+
 GREEN=`tput setaf 2`
 RESET=`tput sgr0`
 #export PS1="\e[0;32m\u@\h$\e[m "
@@ -240,6 +241,13 @@ export PTY_PS1="\[${GREEN}\]\u@virtme\$\[${RESET}\] "
 #export PTY_PS1="\u@virtme$"
 
 #dropbear -R
+
+if [[ -d /run/virtme/user ]]; then
+    for s in /run/virtme/user/*.sh; do
+        setsid $s 0<>"/dev/$consdev" 1>&0 2>&0
+    done
+fi
+
 
 # Bring up a functioning shell on the console.  This is a bit magical:
 # We have no controlling terminal because we're attached to a fake
