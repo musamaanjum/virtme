@@ -1,0 +1,29 @@
+#!/usr/bin/bash
+
+echo "searching PTY..."
+
+get_ptys() {
+expect <<EOF | grep -o -E "/dev/pts/[[:digit:]]+"
+spawn telnet localhost 4444
+send "{ \"execute\": \"qmp_capabilities\" }\r"
+expect "{\"return\": {}}"
+send "{ \"execute\": \"query-chardev\" }\r"
+expect -re "{\"return\".*}\r"
+exit
+EOF
+}
+
+for i in $(get_ptys); do
+    echo "Trying $i"
+    lsof $i 1>/dev/null 2>/dev/null
+    if [[ $? -eq 1 ]] ; then
+	echo "Joining $i... hit ENTER to start. Or ctrl-] to exit"
+	#	stty rows 25 columns 105
+	echo -e '\nstty rows 25 columns 105' > $i
+	exec socat OPEN:$i FILE:`tty`,raw,echo=0,escape=0x1d
+
+	#escape=0x1b
+       fi
+done
+echo No PTY available!
+exit 1
