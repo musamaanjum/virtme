@@ -618,6 +618,8 @@ def do_it() -> int:
             ' '.join(quote_karg(a).replace(',', ',,') for a in kernelargs),
             (',%s' % initrdpath) if initrdpath is not None else '')])
 
+    qemuargs.extend(['-serial', 'pty'])
+    qemuargs.extend(['-serial', 'pty'])
     # Handle --qemu-opt(s)
     qemuargs.extend(args.qemu_opt)
     if args.qemu_opts is not None:

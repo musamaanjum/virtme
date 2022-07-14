@@ -233,19 +233,36 @@ echo "virtme-init: console is $consdev"
 install -d -m 0755 /tmp/roothome
 export HOME=/tmp/roothome
 
+GREEN=`tput setaf 2`
+RESET=`tput sgr0`
+#export PS1="\e[0;32m\u@\h$\e[m "
+export PTY_PS1="\[${GREEN}\]\u@virtme\$\[${RESET}\] "
+#export PTY_PS1="\u@virtme$"
+
+#dropbear -R
+
 # Bring up a functioning shell on the console.  This is a bit magical:
 # We have no controlling terminal because we're attached to a fake
 # console device (probably something like /dev/console), which can't
 # be a controlling terminal.  We are also not a member of a session.
 # Init apparently can't setsid (whether that's a limitation of the
 # setsid binary or the system call, I don't know).
-while true; do
-    # Program the console sensibly
-    if [[ -n "${virtme_stty_con}" ]]; then
-	stty ${virtme_stty_con} <"/dev/$consdev"
-    fi
 
-    setsid bash 0<>"/dev/$consdev" 1>&0 2>&0
-    echo "Shell died.  Will respawn."
-    sleep 0.5
-done
+run_terminal_on () {
+    while true; do
+	# Program the console sensibly
+	if [[ -n "${virtme_stty_con}" ]]; then
+	    echo stty ${virtme_stty_con} < $1
+	fi
+	setsid bash 0<>"$1" 1>&0 2>&0
+	sleep 0.5
+    done
+}
+export HISTFILE=/home/krisman/ext4_images/bash_hist
+export PS1="(CONSOLE)${PTY_PS1}"
+run_terminal_on /dev/$consdev &
+PS1="${PTY_PS1}"
+
+run_terminal_on /dev/ttyS1 &
+run_terminal_on /dev/ttyS2 &
+wait
